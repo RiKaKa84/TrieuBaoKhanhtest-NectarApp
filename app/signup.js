@@ -1,12 +1,12 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Signup() {
@@ -69,9 +69,18 @@ export default function Signup() {
       </Text>
 
       {/* signup button */}
-      <TouchableOpacity style={styles.btn}>
-        <Text style={styles.btnText}>Sign Up</Text>
-      </TouchableOpacity>
+     <TouchableOpacity
+  style={styles.btn}
+  onPress={() => {
+    if (!username || !email || !password) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+    router.replace("/homescreen");
+  }}
+>
+  <Text style={styles.btnText}>Sign Up</Text>
+</TouchableOpacity>
 
       {/* login link */}
       <Text style={styles.bottomText}>
