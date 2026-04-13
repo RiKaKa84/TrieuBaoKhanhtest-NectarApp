@@ -1,34 +1,34 @@
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   Image,
-  Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
+/* fallback image nếu không có param */
 import apple from "../assets/images/apple.png";
 
 export default function ProductDetail() {
+  const { name, price } = useLocalSearchParams();
+
   const [qty, setQty] = useState(1);
-  const [showImage, setShowImage] = useState(false);
 
   return (
     <View style={styles.container}>
-      
       {/* IMAGE */}
       <View style={styles.imageBox}>
-        <TouchableOpacity onPress={() => setShowImage(true)}>
-          <Image source={apple} style={styles.image} />
-        </TouchableOpacity>
+        <Image source={apple} style={styles.image} />
       </View>
 
       {/* NAME + HEART */}
       <View style={styles.nameRow}>
         <View>
-          <Text style={styles.name}>Naturel Red Apple</Text>
+          <Text style={styles.name}>
+            {name || "Naturel Red Apple"}
+          </Text>
           <Text style={styles.sub}>1kg, Price</Text>
         </View>
         <Text style={styles.heart}>♡</Text>
@@ -54,7 +54,9 @@ export default function ProductDetail() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.price}>$4.99</Text>
+        <Text style={styles.price}>
+          {price || "$4.99"}
+        </Text>
       </View>
 
       {/* PRODUCT DETAIL */}
@@ -71,7 +73,7 @@ export default function ProductDetail() {
       {/* NUTRITIONS */}
       <View style={styles.sectionHeader}>
         <Text style={styles.title}>Nutritions</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        <View style={styles.rightRow}>
           <View style={styles.nutriBox}>
             <Text style={styles.nutriText}>100g</Text>
           </View>
@@ -82,7 +84,7 @@ export default function ProductDetail() {
       {/* REVIEW */}
       <View style={styles.sectionHeader}>
         <Text style={styles.title}>Review</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        <View style={styles.rightRow}>
           <Text style={styles.review}>⭐⭐⭐⭐⭐</Text>
           <Text style={styles.arrow}>›</Text>
         </View>
@@ -92,17 +94,6 @@ export default function ProductDetail() {
       <TouchableOpacity style={styles.cartBtn}>
         <Text style={styles.cartText}>Add To Basket</Text>
       </TouchableOpacity>
-
-      {/* MODAL ZOOM IMAGE */}
-      <Modal visible={showImage} transparent={true}>
-        <Pressable
-          style={styles.modalBg}
-          onPress={() => setShowImage(false)}
-        >
-          <Image source={apple} style={styles.fullImage} />
-        </Pressable>
-      </Modal>
-
     </View>
   );
 }
@@ -215,6 +206,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  rightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
   nutriBox: {
     backgroundColor: "#EBF9F1",
     paddingHorizontal: 10,
@@ -244,18 +241,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
-  },
-
-  modalBg: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  fullImage: {
-    width: "90%",
-    height: 300,
-    resizeMode: "contain",
   },
 });

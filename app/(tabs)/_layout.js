@@ -47,15 +47,14 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="favorite"
-        options={{
-          title: "Favourite",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
+  name="favorite"
+  options={{
+    title: "Favorite",
+    tabBarIcon: ({ color, size }) => (
+      <Ionicons name="heart-outline" size={size} color={color} />
+    ),
+  }}
+/>
       <Tabs.Screen
         name="account"
         options={{
@@ -65,6 +64,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
     </Tabs>
   );
 }

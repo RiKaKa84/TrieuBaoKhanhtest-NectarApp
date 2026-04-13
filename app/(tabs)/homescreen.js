@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 /* ================= DATA ================= */
 
@@ -79,16 +80,19 @@ export default function HomeScreen() {
   const renderProduct = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() =>
-        router.push({
-          pathname: "/productDetail",
-          params: {
-            name: item.name,
-            price: item.price,
-            image: item.image, // ✅ FIX QUAN TRỌNG
-          },
-        })
-      }
+      onPress={() => {
+        // ✅ Chỉ điều hướng khi là Red Apple
+        if (item.id === "2") {
+          router.push({
+            pathname: "/productDetail",
+            params: {
+              name: item.name,
+              price: item.price,
+              image: item.image,
+            },
+          });
+        }
+      }}
     >
       <Image source={item.image} style={styles.img} />
 
@@ -113,93 +117,83 @@ export default function HomeScreen() {
   );
 
   return (
-    <FlatList
-      data={[]}
-      keyExtractor={(item, index) => index.toString()}
-      contentContainerStyle={{ paddingBottom: 120 }}
-      ListHeaderComponent={
-        <View style={styles.container}>
-          {/* LOGO */}
-          <Image
-            source={require("../../assets/images/carot.png")}
-            style={styles.logo}
-          />
+    <SafeAreaView style={{ flex: 1 }}>
+      <FlatList
+        data={[]}
+        keyExtractor={(_, index) => index.toString()}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListHeaderComponent={
+          <View style={styles.container}>
+            {/* LOGO */}
+            <Image
+              source={require("../../assets/images/carot.png")}
+              style={styles.logo}
+            />
 
-          {/* LOCATION */}
-          <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={16} color="#FF4D4D" />
-            <View>
-              <Text style={styles.city}>Dhaka</Text>
-              <Text style={styles.address}>Banassre</Text>
+            {/* LOCATION */}
+            <View style={styles.locationWrapper}>
+              <Ionicons name="location-sharp" size={16} color="#7C7C7C" />
+              <Text style={styles.locationText}>Dhaka, Banassre</Text>
             </View>
-          </View>
 
-          {/* SEARCH */}
-          <View style={styles.searchBox}>
-            <TextInput placeholder="Search Store" style={styles.searchInput} />
-          </View>
+            {/* SEARCH */}
+            <View style={styles.searchBox}>
+              <TextInput
+                placeholder="Search Store"
+                style={styles.searchInput}
+              />
+            </View>
 
-          {/* BANNER */}
-          <ImageBackground
-            source={require("../../assets/images/fresh-vegetable.png")}
-            style={styles.banner}
-            imageStyle={{ borderRadius: 15 }}
-          />
+            {/* BANNER */}
+            <ImageBackground
+              source={require("../../assets/images/fresh-vegetable.png")}
+              style={styles.banner}
+              imageStyle={{ borderRadius: 15 }}
+            />
 
-          {/* EXCLUSIVE */}
-          <View style={styles.row}>
+            {/* EXCLUSIVE */}
             <Text style={styles.section}>Exclusive Offer</Text>
-          </View>
+            <FlatList
+              data={exclusiveProducts}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+            />
 
-          <FlatList
-            data={exclusiveProducts}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-          />
-
-          {/* BEST SELLING */}
-          <View style={styles.row}>
+            {/* BEST SELLING */}
             <Text style={styles.section}>Best Selling</Text>
-          </View>
+            <FlatList
+              data={bestSelling}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+            />
 
-          <FlatList
-            data={bestSelling}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-          />
-
-          {/* GROCERIES */}
-          <View style={styles.row}>
+            {/* GROCERIES */}
             <Text style={styles.section}>Groceries</Text>
-          </View>
+            <FlatList
+              data={groceries}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={renderGrocery}
+              keyExtractor={(item) => item.id}
+            />
 
-          <FlatList
-            data={groceries}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={renderGrocery}
-            keyExtractor={(item) => item.id}
-          />
-
-          {/* MEAT */}
-          <View style={styles.row}>
+            {/* MEAT */}
             <Text style={styles.section}>Meat</Text>
+            <FlatList
+              data={meats}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id}
+            />
           </View>
-
-          <FlatList
-            data={meats}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-          />
-        </View>
-      }
-    />
+        }
+      />
+    </SafeAreaView>
   );
 }
 
@@ -209,30 +203,28 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 10,
   },
 
   logo: {
     width: 30,
     height: 30,
     alignSelf: "center",
-    marginBottom: 15,
+    marginBottom: 8,
+    resizeMode: "contain",
   },
 
-  locationRow: {
+  locationWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 15,
+    gap: 5,
   },
 
-  city: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  address: {
-    fontSize: 13,
-    color: "#777",
+  locationText: {
+    fontSize: 14,
+    color: "#7C7C7C",
   },
 
   searchBox: {
@@ -251,14 +243,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  row: {
-    marginTop: 10,
-    marginBottom: 10,
-  },
-
   section: {
     fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 10,
+    marginTop: 10,
   },
 
   card: {
