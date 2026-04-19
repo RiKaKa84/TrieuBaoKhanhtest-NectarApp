@@ -121,7 +121,7 @@ export default function HomeScreen() {
       <FlatList
         data={[]}
         keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 120, alignItems: "center" }}
         ListHeaderComponent={
           <View style={styles.container}>
             {/* LOGO */}
@@ -204,6 +204,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     paddingTop: 10,
+    width: "100%",
+    maxWidth: 900,
+    alignSelf: "center",
   },
 
   logo: {

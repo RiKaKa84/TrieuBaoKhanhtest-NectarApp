@@ -1,7 +1,7 @@
 - Thông tin sinh viên
   
-- Họ và tên: Lê Văn Sở
-- Mã sinh viên: 23810310018
+- Họ và tên: Triệu Bảo Khanh
+- Mã sinh viên: 23810310013
 
 
 -Ảnh chụp màn hình:

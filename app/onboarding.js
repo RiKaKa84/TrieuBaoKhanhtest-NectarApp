@@ -1,101 +1,156 @@
 import { useRouter } from "expo-router";
 import {
-    Image,
-    ImageBackground,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  ImageBackground,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 export default function Onboarding() {
   const router = useRouter();
 
   return (
-    <ImageBackground
-      source={{ uri: "https://i.imgur.com/8Km9tLL.jpg" }}
-      style={styles.container}
-    >
-      <View style={styles.overlay}>
-        
-        {/* 🥕 Carrot logo */}
-        <Image
-          source={require("../assets/images/carrot.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+    <SafeAreaView style={styles.fullContainer}>
+      <View style={styles.screenWrapper}>
+        {/* Label góc trên */}
+        <Text style={styles.pageLabel}>onboarding</Text>
 
-        <View style={styles.content}>
-          <Text style={styles.title}>
-            Welcome{"\n"}to our store
-          </Text>
+        {/* Ảnh nền */}
+        <ImageBackground
+          source={require("../assets/images/anh.png")}
+          style={styles.imageBackground}
+          imageStyle={styles.imageStyle}
+          resizeMode="cover"
+        >
+          {/* Overlay + content */}
+          <View style={styles.overlay}>
+            <View style={styles.contentWrapper}>
+              {/* Logo */}
+              <Image
+                source={require("../assets/images/carrot.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
 
-          <Text style={styles.desc}>
-            Get your groceries in as fast as one hour
-          </Text>
+              {/* Text */}
+              <View style={styles.textSection}>
+                <Text style={styles.mainTitle}>
+                  Welcome{"\n"}to our store
+                </Text>
+                <Text style={styles.subTitle}>
+                  Get your groceries in as fast as one hour
+                </Text>
+              </View>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.push("/signin")}
-          >
-            <Text style={styles.btnText}>Get Started</Text>
-          </TouchableOpacity>
-        </View>
-
+              {/* Button */}
+              <TouchableOpacity
+                style={styles.getStartedBtn}
+                onPress={() => router.push("/signin")}
+              >
+                <Text style={styles.btnText}>Get Started</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ImageBackground>
       </View>
-    </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullContainer: {
     flex: 1,
+    backgroundColor: "#f0f2f5",
+    padding: 12,
   },
 
+  screenWrapper: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+
+  pageLabel: {
+    fontSize: 14,
+    color: "#8892a5",
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+
+  imageBackground: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "flex-end",
+  },
+
+  // ✅ đảm bảo ảnh luôn nằm giữa, không bị lệch
+  imageStyle: {
+    resizeMode: "cover",
+    alignSelf: "center",
+    
+  },
+
+  // lớp phủ nhẹ để dễ đọc chữ
   overlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.25)",
     justifyContent: "flex-end",
-    padding: 25,
-    backgroundColor: "rgba(0,0,0,0.35)",
   },
 
-  // 🥕 logo carrot
+  contentWrapper: {
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+
   logo: {
-    position: "absolute",
-    bottom: 260,
-    alignSelf: "center",
     width: 60,
     height: 60,
+    marginBottom: 28,
   },
 
-  content: {
-    marginBottom: 30,
-  },
-
-  title: {
-    color: "#fff",
-    fontSize: 34,
-    fontWeight: "bold",
-    lineHeight: 42,
-  },
-
-  desc: {
-    color: "#ddd",
-    marginTop: 10,
-    marginBottom: 25,
-    fontSize: 14,
-  },
-
-  button: {
-    backgroundColor: "#53B175",
-    padding: 18,
-    borderRadius: 18,
+  textSection: {
     alignItems: "center",
+    marginBottom: 35,
+  },
+
+  mainTitle: {
+    color: "#ffffff",
+    fontSize: 40,
+    fontWeight: "700",
+    lineHeight: 50,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+
+  subTitle: {
+    color: "#e5e7eb",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+
+  getStartedBtn: {
+    backgroundColor: "#53B175",
+    width: "100%",
+    paddingVertical: 18,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
 
   btnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 17,
   },
 });

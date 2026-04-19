@@ -15,6 +15,8 @@ export default function ProductDetail() {
   const { name, price } = useLocalSearchParams();
 
   const [qty, setQty] = useState(1);
+  const unitPrice = parseFloat((price || "$4.99").replace(/[^0-9.]/g, "")) || 4.99;
+  const totalPrice = `$${(unitPrice * qty).toFixed(2)}`;
 
   return (
     <View style={styles.container}>
@@ -54,9 +56,7 @@ export default function ProductDetail() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.price}>
-          {price || "$4.99"}
-        </Text>
+        <Text style={styles.price}>{totalPrice}</Text>
       </View>
 
       {/* PRODUCT DETAIL */}
