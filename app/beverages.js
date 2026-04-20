@@ -8,54 +8,63 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useCart } from "../contexts/cart-context";
 
 const data = [
   {
-    id: "1",
+    id: "b1",
     name: "Diet Coke",
     volume: "355ml",
-    price: "$1.99",
+    price: 1.99,
     image: require("@/assets/images/diet-coke.png"),
   },
   {
-    id: "2",
+    id: "b2",
     name: "Sprite Can",
     volume: "325ml",
-    price: "$1.50",
+    price: 1.50,
     image: require("@/assets/images/sprite-can.png"),
   },
   {
-    id: "3",
+    id: "b3",
     name: "Apple & Grape Juice",
     volume: "2L",
-    price: "$15.99",
+    price: 15.99,
     image: require("@/assets/images/apple-and-grape-juice.png"),
   },
   {
-    id: "4",
+    id: "b4",
     name: "Orange Juice",
     volume: "2L",
-    price: "$15.99",
+    price: 15.99,
     image: require("@/assets/images/orange-juice.png"),
   },
   {
-    id: "5",
+    id: "b5",
     name: "Coca Cola Can",
     volume: "325ml",
-    price: "$4.99",
+    price: 4.99,
     image: require("@/assets/images/cocacola.png"),
   },
   {
-    id: "6",
+    id: "b6",
     name: "Pepsi Can",
     volume: "330ml",
-    price: "$4.99",
+    price: 4.99,
     image: require("@/assets/images/pepsi.png"),
   },
 ];
 
 export default function BeveragesScreen() {
   const router = useRouter();
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (item) => {
+    addToCart({
+      ...item,
+      unit: item.volume + ", Price",
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -78,7 +87,13 @@ export default function BeveragesScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <TouchableOpacity 
+            style={styles.card}
+            onPress={() => router.push({
+              pathname: "/productDetail",
+              params: { id: item.id }
+            })}
+          >
             {/* IMAGE */}
             <View style={styles.imageBox}>
               <Image
@@ -94,13 +109,16 @@ export default function BeveragesScreen() {
 
             {/* PRICE + BUTTON */}
             <View style={styles.bottom}>
-              <Text style={styles.price}>{item.price}</Text>
+              <Text style={styles.price}>${item.price.toFixed(2)}</Text>
 
-              <TouchableOpacity style={styles.btn}>
+              <TouchableOpacity 
+                style={styles.btn}
+                onPress={() => handleAddToCart(item)}
+              >
                 <Text style={styles.plus}>+</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>

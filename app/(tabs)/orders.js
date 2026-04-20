@@ -5,14 +5,14 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCart } from "../_context/cart-context";
+import { useCart } from "../../contexts/cart-context";
 
 function formatDate(isoString) {
   try {

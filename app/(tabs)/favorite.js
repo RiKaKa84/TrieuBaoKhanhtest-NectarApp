@@ -1,109 +1,102 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { useCart } from "../_context/cart-context";
+import {
+    Alert,
+    Dimensions,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useCart } from "../../contexts/cart-context";
 
-const favouriteProducts = [
-  {
-    id: "sprite-can-325ml",
-    name: "Sprite Can",
-    description: "325ml, Price",
-    price: "$1.50",
-    image: require("@/assets/images/sprite-can.png"),
-  },
-  {
-    id: "diet-coke-355ml",
-    name: "Diet Coke",
-    description: "355ml, Price",
-    price: "$1.99",
-    image: require("@/assets/images/diet-coke.png"),
-  },
-  {
-    id: "apple-grape-juice-2l",
-    name: "Apple & Grape Juice",
-    description: "2L, Price",
-    price: "$15.50",
-    image: require("@/assets/images/apple-and-grape-juice.png"),
-  },
-  {
-    id: "coca-cola-can-325ml",
-    name: "Coca Cola Can",
-    description: "325ml, Price",
-    price: "$4.99",
-    image: require("@/assets/images/cocacola.png"),
-  },
-  {
-    id: "pepsi-can-330ml",
-    name: "Pepsi Can",
-    description: "330ml, Price",
-    price: "$4.99",
-    image: require("@/assets/images/pepsi.png"),
-  },
-];
+const screenWidth = Dimensions.get("window").width;
+
+// Dữ liệu Favorites sẽ lấy từ CartContext động
 
 export default function FavouriteScreen() {
-  const { addAllToCart } = useCart();
+  const { favorites, addAllToCart, toggleFavorite } = useCart();
 
   const handleAddAllToCart = () => {
-    addAllToCart(favouriteProducts);
-    alert("All favourite items were added to My Cart.");
+    if (favorites.length === 0) {
+      Alert.alert("Empty", "You have no favorite items to add.");
+      return;
+    }
+    addAllToCart(favorites);
+    Alert.alert("Success", "All items have been added to your cart.");
+  };
+
+  const renderItem = ({ item, index }) => {
+    // Giá có thể là số hoặc chuỗi, chuẩn hóa để hiển thị
+    const priceValue = typeof item.price === "number" ? item.price : parseFloat(item.price?.toString()?.replace(/[^0-9.]/g, "") || 0);
+
+    return (
+      <View>
+        <View style={styles.productItem}>
+          <Image source={item.image} style={styles.productImage} contentFit="contain" />
+
+          <View style={styles.productDetails}>
+            <Text style={styles.productName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text style={styles.productDescription}>{item.unit || item.description}</Text>
+          </View>
+
+          <View style={styles.rightSection}>
+            <Text style={styles.productPrice}>${priceValue.toFixed(2)}</Text>
+            <TouchableOpacity 
+              style={styles.removeBtn} 
+              onPress={() => toggleFavorite(item)}
+            >
+              <Ionicons name="close" size={20} color="#7C7C7C" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Divider */}
+        {index !== favorites.length - 1 && (
+          <View style={styles.divider} />
+        )}
+      </View>
+    );
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* HEADER */}
-      <ThemedView style={styles.header}>
-        <ThemedText style={styles.pageTitle}>Favourite</ThemedText>
-      </ThemedView>
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Favorites</Text>
+      </View>
 
-      {/* LIST */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {favouriteProducts.map((item, index) => (
-          <View key={item.id}>
-            <TouchableOpacity style={styles.productItem}>
-              <Image source={item.image} style={styles.productImage} />
+      {/* LIST OR EMPTY VIEW */}
+      {favorites.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="heart-dislike-outline" size={80} color="#DDD" />
+          <Text style={styles.emptyText}>Your favorites list is empty</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-              <ThemedView style={styles.productDetails}>
-                <ThemedText style={styles.productName}>
-                  {item.name}
-                </ThemedText>
-                <ThemedText style={styles.productDescription}>
-                  {item.description}
-                </ThemedText>
-              </ThemedView>
-
-              <ThemedText style={styles.productPrice}>
-                {item.price}
-              </ThemedText>
-
-              <Ionicons name="chevron-forward" size={20} color="#999" />
-            </TouchableOpacity>
-
-            {/* 🔥 Divider đậm hơn */}
-            {index !== favouriteProducts.length - 1 && (
-              <View style={styles.divider} />
-            )}
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* 🔥 BUTTON dưới cùng */}
-      <View style={styles.bottomSection}>
-        <View style={styles.topDivider} />
-
-        <TouchableOpacity
-          style={styles.addAllButton}
+      {/* FOOTER BUTTON */}
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.addAllBtn, favorites.length === 0 && styles.btnDisabled]} 
           onPress={handleAddAllToCart}
+          disabled={favorites.length === 0}
         >
-          <ThemedText style={styles.addAllButtonText}>
-            Add All To Cart
-          </ThemedText>
+          <Text style={styles.addAllText}>Add All To Cart</Text>
         </TouchableOpacity>
       </View>
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
@@ -112,92 +105,95 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-
   header: {
-    paddingTop: 50,
-    paddingBottom: 15,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "#E2E2E2",
   },
-
   pageTitle: {
     fontSize: 20,
-    textAlign: "center",
-    fontFamily: Fonts.roundedBold,
+    fontWeight: "bold",
+    color: "#181725",
   },
-
-  content: {
-    paddingHorizontal: 20,
+  listContent: {
+    paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 120,
+    paddingBottom: 20,
   },
-
   productItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 26,
+    paddingVertical: 15,
   },
-
   productImage: {
-    width: 50,
-    height: 50,
-    resizeMode: "contain",
-    marginRight: 12,
+    width: 60,
+    height: 60,
+    marginRight: 15,
   },
-
   productDetails: {
     flex: 1,
+    justifyContent: "center",
   },
-
   productName: {
-    fontSize: 15,
-    fontFamily: Fonts.roundedBold,
-    color: "#222",
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#181725",
+    marginBottom: 5,
   },
-
   productDescription: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 3,
+    fontSize: 14,
+    color: "#7C7C7C",
   },
-
-  productPrice: {
-    fontSize: 15,
-    fontFamily: Fonts.roundedBold,
-    marginRight: 10,
-  },
-divider: {
-  height: 1,
-  backgroundColor: "#cfcfcf",
-  marginLeft: 0,   // 👈 từ đầu dòng luôn
-  marginRight: 0,
-  marginVertical: 10,
-},
-
-  /* 🔥 Section dưới */
-  bottomSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: "#fff",
-  },
-
-  /* 🔥 Gạch ngang trên button */
-  topDivider: {
-    height: 1,
-    backgroundColor: "#ccc",
-    marginBottom: 15,
-  },
-
-  addAllButton: {
-    backgroundColor: "#53B175",
-    paddingVertical: 18,
-    borderRadius: 25,
+  rightSection: {
+    flexDirection: "row",
     alignItems: "center",
   },
-
-  addAllButtonText: {
-    color: "#fff",
+  productPrice: {
     fontSize: 16,
-    fontFamily: Fonts.roundedBold,
+    fontWeight: "600",
+    color: "#181725",
+    marginRight: 10,
+  },
+  removeBtn: {
+    padding: 8,
+    marginLeft: 5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E2E2E2",
+  },
+  footer: {
+    padding: 20,
+    paddingBottom: 30,
+  },
+  addAllBtn: {
+    backgroundColor: "#53B175",
+    height: 67,
+    borderRadius: 19,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addAllText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#7C7C7C",
+    marginTop: 20,
+    fontWeight: "500",
+  },
+  btnDisabled: {
+    backgroundColor: "#AAA",
+    opacity: 0.7,
   },
 });

@@ -4,12 +4,14 @@
  * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import storage from "./simpleStorage";
 
 const KEYS = {
   USER: "@nectar_user",
+  ACCOUNTS: "@nectar_accounts",
   CART: "@nectar_cart",
   ORDERS: "@nectar_orders",
+  FAVORITES: "@nectar_favorites",
 };
 
 /* ===================== USER ===================== */
@@ -20,9 +22,9 @@ const KEYS = {
 export async function saveUser(user) {
   try {
     const json = JSON.stringify(user);
-    await AsyncStorage.setItem(KEYS.USER, json);
+    await storage.setItem(KEYS.USER, json);
   } catch (error) {
-    console.error("[storageService] saveUser error:", error);
+    // Silent error
   }
 }
 
@@ -31,11 +33,40 @@ export async function saveUser(user) {
  */
 export async function getUser() {
   try {
-    const json = await AsyncStorage.getItem(KEYS.USER);
+    const json = await storage.getItem(KEYS.USER);
     return json != null ? JSON.parse(json) : null;
   } catch (error) {
-    console.error("[storageService] getUser error:", error);
     return null;
+  }
+}
+
+/**
+ * Lưu tài khoản đăng ký mới vào bộ nhớ
+ */
+export async function saveAccount(account) {
+  try {
+    const accounts = await getAccounts();
+    const exists = accounts.some(
+      (item) => item.email.toLowerCase() === account.email.toLowerCase()
+    );
+    if (exists) {
+      return false;
+    }
+    accounts.push(account);
+    const json = JSON.stringify(accounts);
+    await storage.setItem(KEYS.ACCOUNTS, json);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+export async function getAccounts() {
+  try {
+    const json = await storage.getItem(KEYS.ACCOUNTS);
+    return json != null ? JSON.parse(json) : [];
+  } catch (error) {
+    return [];
   }
 }
 
@@ -44,9 +75,9 @@ export async function getUser() {
  */
 export async function clearUser() {
   try {
-    await AsyncStorage.removeItem(KEYS.USER);
+    await storage.removeItem(KEYS.USER);
   } catch (error) {
-    console.error("[storageService] clearUser error:", error);
+    // Silent error
   }
 }
 
@@ -60,9 +91,9 @@ export async function saveCart(cart) {
     // Bỏ field image vì require() không serializable
     const serializable = cart.map(({ image, ...rest }) => rest);
     const json = JSON.stringify(serializable);
-    await AsyncStorage.setItem(KEYS.CART, json);
+    await storage.setItem(KEYS.CART, json);
   } catch (error) {
-    console.error("[storageService] saveCart error:", error);
+    // Silent error
   }
 }
 
@@ -71,10 +102,9 @@ export async function saveCart(cart) {
  */
 export async function getCart() {
   try {
-    const json = await AsyncStorage.getItem(KEYS.CART);
+    const json = await storage.getItem(KEYS.CART);
     return json != null ? JSON.parse(json) : null;
   } catch (error) {
-    console.error("[storageService] getCart error:", error);
     return null;
   }
 }
@@ -87,9 +117,9 @@ export async function getCart() {
 export async function saveOrders(orders) {
   try {
     const json = JSON.stringify(orders);
-    await AsyncStorage.setItem(KEYS.ORDERS, json);
+    await storage.setItem(KEYS.ORDERS, json);
   } catch (error) {
-    console.error("[storageService] saveOrders error:", error);
+    // Silent error
   }
 }
 
@@ -98,10 +128,35 @@ export async function saveOrders(orders) {
  */
 export async function getOrders() {
   try {
-    const json = await AsyncStorage.getItem(KEYS.ORDERS);
+    const json = await storage.getItem(KEYS.ORDERS);
     return json != null ? JSON.parse(json) : [];
   } catch (error) {
-    console.error("[storageService] getOrders error:", error);
+    return [];
+  }
+}
+
+/* ===================== FAVORITES ===================== */
+
+/**
+ * Lưu danh sách sản phẩm yêu thích
+ */
+export async function saveFavorites(favorites) {
+  try {
+    const json = JSON.stringify(favorites);
+    await storage.setItem(KEYS.FAVORITES, json);
+  } catch (error) {
+    // Silent error
+  }
+}
+
+/**
+ * Lấy danh sách sản phẩm yêu thích
+ */
+export async function getFavorites() {
+  try {
+    const json = await storage.getItem(KEYS.FAVORITES);
+    return json != null ? JSON.parse(json) : [];
+  } catch (error) {
     return [];
   }
 }
@@ -111,8 +166,8 @@ export async function getOrders() {
  */
 export async function clearAll() {
   try {
-    await AsyncStorage.multiRemove([KEYS.USER, KEYS.CART, KEYS.ORDERS]);
+    await storage.multiRemove([KEYS.USER, KEYS.CART, KEYS.ORDERS, KEYS.FAVORITES]);
   } catch (error) {
-    console.error("[storageService] clearAll error:", error);
+    // Silent error
   }
 }

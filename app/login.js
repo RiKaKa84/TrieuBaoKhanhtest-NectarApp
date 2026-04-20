@@ -6,16 +6,16 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useAuth } from "./_context/auth-context";
+import { useAuth } from "../contexts/auth-context";
 
 export default function Login() {
   const router = useRouter();
@@ -33,16 +33,21 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const result = await login(email.trim(), password);
+      const result = await login(email.trim(), password.trim());
       if (result.success) {
-        router.replace("/(tabs)/homescreen");
+        // Tắt loading trước
+        setLoading(false);
+        // Delay để state cập nhật trước khi navigate
+        setTimeout(() => {
+          router.replace("/(tabs)/homescreen");
+        }, 100);
       } else {
+        setLoading(false);
         Alert.alert("Đăng nhập thất bại", result.message);
       }
     } catch (err) {
-      Alert.alert("Lỗi", "Đã có lỗi xảy ra, vui lòng thử lại");
-    } finally {
       setLoading(false);
+      Alert.alert("Lỗi", "Đã có lỗi xảy ra, vui lòng thử lại");
     }
   };
 
@@ -90,7 +95,7 @@ export default function Login() {
       />
 
       {/* hint */}
-      <Text style={styles.hint}>Demo: user@nectar.com / 123456</Text>
+      <Text style={styles.hint}>Email hoặc tên, ví dụ: user@nectar.com / 123456</Text>
 
       {/* forgot password */}
       <Text style={styles.forgot}>Forgot Password?</Text>

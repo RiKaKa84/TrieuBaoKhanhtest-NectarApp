@@ -1,13 +1,14 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Keyboard,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Verification() {
   const router = useRouter();
@@ -18,11 +19,23 @@ export default function Verification() {
     setCode(filtered);
   };
 
+  const handleNext = () => {
+    Keyboard.dismiss();
+    if (code.length === 4) {
+      setTimeout(() => router.push("/location"), 50);
+    }
+  };
+
+  const handleBack = () => {
+    Keyboard.dismiss();
+    setTimeout(() => router.back(), 50);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* 🎯 Nút quay lại màn hình trước */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
 
@@ -36,6 +49,7 @@ export default function Verification() {
         <TextInput
           style={styles.input}
           keyboardType="numeric"
+          returnKeyType="done"
           maxLength={4}
           value={code}
           onChangeText={handleChange}
@@ -43,6 +57,8 @@ export default function Verification() {
           placeholderTextColor="#9E9E9E"
           autoFocus={true}
           autoCorrect={false}
+          blurOnSubmit={true}
+          onSubmitEditing={handleNext}
         />
 
         {/* Nút gửi lại mã */}
@@ -57,7 +73,7 @@ export default function Verification() {
             { backgroundColor: code.length === 4 ? "#53B175" : "#A5D9B8" }
           ]}
           disabled={code.length !== 4}
-          onPress={() => router.push("/location")}
+          onPress={handleNext}
         >
           <Text style={styles.nextText}>→</Text>
         </TouchableOpacity>

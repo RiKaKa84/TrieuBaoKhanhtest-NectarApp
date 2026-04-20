@@ -8,15 +8,15 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useCart } from "../_context/cart-context";
+import { useCart } from "../../contexts/cart-context";
 
 export default function CartScreen() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function CartScreen() {
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
-      <Image source={item.image} style={styles.image} />
+      <Image source={item.image} style={styles.image} contentFit="contain" />
 
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{item.name}</Text>
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
     marginRight: 12,
-    contentFit: "contain",
   },
 
   name: {

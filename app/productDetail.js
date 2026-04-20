@@ -3,136 +3,194 @@
  * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
  */
 
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    ToastAndroid,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useCart } from "./_context/cart-context";
+import { Image } from "expo-image";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { getProductById } from "../constants/products";
+import { useCart } from "../contexts/cart-context";
 
-/* fallback image nếu không có param */
-import apple from "../assets/images/apple.png";
+const screenWidth = Dimensions.get("window").width;
 
 function showToast(message) {
   if (Platform.OS === "android") {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   } else {
-    Alert.alert("Thành công", message);
+    Alert.alert("Success", message);
   }
 }
 
 export default function ProductDetail() {
-  const { name, price } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, toggleFavorite, isFavorite: checkFavorite } = useCart();
 
+  const product = getProductById(id);
   const [qty, setQty] = useState(1);
-  const unitPrice = parseFloat((price || "$4.99").replace(/[^0-9.]/g, "")) || 4.99;
+  const isFavorite = checkFavorite(product?.id);
+  const [expandedSection, setExpandedSection] = useState(null);
+
+  const unitPrice = product.price || 4.99;
   const totalPrice = `$${(unitPrice * qty).toFixed(2)}`;
 
   const handleAddToBasket = () => {
     addToCart({
-      id: `detail-${Date.now()}`,
-      name: name || "Naturel Red Apple",
+      id: product.id,
+      name: product.name,
       price: unitPrice,
-      unit: "1kg, Price",
-      image: apple,
+      unit: product.unit,
+      image: product.image,
       qty: qty,
     });
-    showToast(`${name || "Sản phẩm"} đã thêm vào giỏ hàng!`);
+    showToast(`${product.name} đã thêm vào giỏ hàng!`);
   };
 
+  const renderStars = (rating) => {
+    return "⭐".repeat(rating);
+  };
+
+  if (!product) return null;
+
   return (
-    <View style={styles.container}>
-      {/* BACK */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Quay lại</Text>
-      </TouchableOpacity>
-
-      {/* IMAGE */}
-      <View style={styles.imageBox}>
-        <Image source={apple} style={styles.image} />
+    <SafeAreaView style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => toggleFavorite(product)}
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={24}
+            color={isFavorite ? "#53B175" : "#7C7C7C"}
+          />
+        </TouchableOpacity>
       </View>
 
-      {/* NAME + HEART */}
-      <View style={styles.nameRow}>
-        <View>
-          <Text style={styles.name}>
-            {name || "Naturel Red Apple"}
-          </Text>
-          <Text style={styles.sub}>1kg, Price</Text>
-        </View>
-        <Text style={styles.heart}>♡</Text>
-      </View>
-
-      {/* QTY + PRICE */}
-      <View style={styles.row}>
-        <View style={styles.qtyBox}>
-          <TouchableOpacity
-            style={styles.qtyBtn}
-            onPress={() => setQty(qty > 1 ? qty - 1 : 1)}
-          >
-            <Text style={styles.minus}>-</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.qty}>{qty}</Text>
-
-          <TouchableOpacity
-            style={styles.qtyBtn}
-            onPress={() => setQty(qty + 1)}
-          >
-            <Text style={styles.plus}>+</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.price}>{totalPrice}</Text>
-      </View>
-
-      {/* PRODUCT DETAIL */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.title}>Product Detail</Text>
-        <Text style={styles.arrow}>˅</Text>
-      </View>
-
-      <Text style={styles.desc}>
-        Apples are nutritious. Apples may be good for weight loss. Apples may
-        be good for your heart. As part of a healthful and varied diet.
-      </Text>
-
-      {/* NUTRITIONS */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.title}>Nutritions</Text>
-        <View style={styles.rightRow}>
-          <View style={styles.nutriBox}>
-            <Text style={styles.nutriText}>100g</Text>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* IMAGE */}
+        <View style={styles.imageContainer}>
+          <Image source={product.image} style={styles.image} contentFit="contain" />
+          <View style={styles.dotsContainer}>
+            <View style={[styles.dot, styles.activeDot]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
           </View>
-          <Text style={styles.arrow}>›</Text>
         </View>
-      </View>
 
-      {/* REVIEW */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.title}>Review</Text>
-        <View style={styles.rightRow}>
-          <Text style={styles.review}>⭐⭐⭐⭐⭐</Text>
-          <Text style={styles.arrow}>›</Text>
+        {/* INFO */}
+        <View style={styles.infoSection}>
+          <Text style={styles.name}>{product.name}</Text>
+          <Text style={styles.unit}>{product.unit}</Text>
         </View>
-      </View>
 
-      {/* BUTTON */}
-      <TouchableOpacity style={styles.cartBtn} onPress={handleAddToBasket}>
-        <Text style={styles.cartText}>Add To Basket</Text>
-      </TouchableOpacity>
-    </View>
+        {/* QTY + PRICE ROW */}
+        <View style={styles.qtyPriceRow}>
+          <View style={styles.qtyBox}>
+            <TouchableOpacity
+              style={styles.qtyBtn}
+              onPress={() => setQty(qty > 1 ? qty - 1 : 1)}
+            >
+              <Ionicons name="remove" size={24} color={qty > 1 ? "#53B175" : "#B1B1B1"} />
+            </TouchableOpacity>
+
+            <View style={styles.qtyValueBox}>
+              <Text style={styles.qty}>{qty}</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.qtyBtn}
+              onPress={() => setQty(qty + 1)}
+            >
+              <Ionicons name="add" size={24} color="#53B175" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.price}>{totalPrice}</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* ACCORDION SECTIONS */}
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setExpandedSection(expandedSection === "detail" ? null : "detail")}
+        >
+          <Text style={styles.sectionTitle}>Product Detail</Text>
+          <Ionicons name={expandedSection === "detail" ? "chevron-up" : "chevron-down"} size={20} color="#181725" />
+        </TouchableOpacity>
+        {expandedSection === "detail" && (
+          <Text style={styles.description}>{product.description}</Text>
+        )}
+
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setExpandedSection(expandedSection === "nutrition" ? null : "nutrition")}
+        >
+          <Text style={styles.sectionTitle}>Nutritions</Text>
+          <View style={styles.sectionRight}>
+            <View style={styles.nutriBadge}>
+              <Text style={styles.nutriText}>{product.nutrition}</Text>
+            </View>
+            <Ionicons name={expandedSection === "nutrition" ? "chevron-up" : "chevron-down"} size={20} color="#181725" />
+          </View>
+        </TouchableOpacity>
+        {expandedSection === "nutrition" && (
+          <View style={styles.nutritionContent}>
+            <Text style={styles.nutritionText}>Organic & Natural energy source.</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setExpandedSection(expandedSection === "review" ? null : "review")}
+        >
+          <Text style={styles.sectionTitle}>Review</Text>
+          <View style={styles.sectionRight}>
+            <Text style={styles.stars}>{renderStars(product.rating)}</Text>
+            <Ionicons name={expandedSection === "review" ? "chevron-up" : "chevron-down"} size={20} color="#181725" />
+          </View>
+        </TouchableOpacity>
+        {expandedSection === "review" && (
+          <View style={styles.reviewContent}>
+            <Text style={styles.reviewText}>Fresh and tasty quality!</Text>
+          </View>
+        )}
+
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+
+      {/* FOOTER BUTTON */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.addCartBtn} onPress={handleAddToBasket}>
+          <Text style={styles.addCartText}>Add To Basket</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
+
 
 /* ================= STYLE ================= */
 
@@ -140,152 +198,218 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 20,
   },
 
-  backBtn: {
-    marginBottom: 10,
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
   },
 
-  backText: {
-    color: "#53B175",
-    fontSize: 15,
-    fontWeight: "500",
+  headerBtn: {
+    padding: 8,
+  },
+
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+
+  imageContainer: {
+    alignItems: "center",
+    marginBottom: 24,
   },
 
   imageBox: {
     backgroundColor: "#F2F3F2",
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: "center",
-    padding: 30,
-    marginBottom: 20,
+    justifyContent: "center",
+    paddingVertical: 60,
+    marginBottom: 16,
   },
 
   image: {
-    width: 230,
-    height: 230,
-    resizeMode: "contain",
+    width: 200,
+    height: 200,
   },
 
-  nameRow: {
+  dotsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#e8e8e8",
+  },
+
+  activeDot: {
+    backgroundColor: "#53B175",
+    width: 24,
+  },
+
+  infoSection: {
+    marginBottom: 16,
   },
 
   name: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 6,
   },
 
-  sub: {
-    color: "#7C7C7C",
-    marginTop: 5,
-  },
-
-  heart: {
-    fontSize: 22,
+  unit: {
+    fontSize: 14,
     color: "#999",
   },
 
-  row: {
+  qtyPriceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 20,
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E2E2",
   },
 
   qtyBox: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E2E2E2",
-    borderRadius: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
   },
 
   qtyBtn: {
-    paddingHorizontal: 10,
+    padding: 10,
   },
 
-  minus: {
-    fontSize: 20,
-    color: "#B3B3B3",
-  },
-
-  plus: {
-    fontSize: 20,
-    color: "#53B175",
-  },
-
-  qty: {
-    fontSize: 16,
+  qtyValueBox: {
+    width: 45,
+    height: 45,
+    borderWidth: 1,
+    borderColor: "#E2E2E2",
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: 10,
   },
 
+  qty: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#181725",
+  },
+
   price: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#181725",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E2E2E2",
+    marginVertical: 10,
   },
 
   sectionHeader: {
-    marginTop: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E2E2",
   },
 
-  title: {
-    fontWeight: "bold",
+  sectionTitle: {
     fontSize: 16,
+    fontWeight: "600",
+    color: "#181725",
   },
 
-  arrow: {
-    fontSize: 18,
-    color: "#999",
-  },
-
-  desc: {
-    color: "#7C7C7C",
-    lineHeight: 20,
-    marginTop: 5,
-  },
-
-  rightRow: {
+  sectionRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 8,
   },
 
-  nutriBox: {
+  nutriBadge: {
     backgroundColor: "#EBF9F1",
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
+    paddingVertical: 4,
+    borderRadius: 5,
   },
 
   nutriText: {
-    color: "#53B175",
-    fontWeight: "bold",
+    color: "#7C7C7C",
+    fontWeight: "600",
+    fontSize: 12,
   },
 
-  review: {
+  description: {
+    fontSize: 13,
+    color: "#7C7C7C",
+    lineHeight: 21,
+    paddingVertical: 12,
+  },
+
+  nutritionContent: {
+    paddingVertical: 12,
+  },
+
+  nutritionText: {
+    fontSize: 13,
+    color: "#7C7C7C",
+    paddingVertical: 4,
+  },
+
+  stars: {
     fontSize: 16,
-    color: "#F4B400",
   },
 
-  cartBtn: {
+  reviewContent: {
+    paddingVertical: 12,
+  },
+
+  reviewText: {
+    fontSize: 13,
+    color: "#7C7C7C",
+    lineHeight: 21,
+  },
+
+  bottomPadding: {
+    height: 100,
+  },
+
+  footer: {
+    paddingHorizontal: 25,
+    paddingBottom: 30,
+    paddingTop: 15,
+    backgroundColor: "#fff",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+
+  addCartBtn: {
     backgroundColor: "#53B175",
-    padding: 18,
-    borderRadius: 20,
-    marginTop: 30,
+    height: 67,
+    borderRadius: 19,
+    justifyContent: "center",
     alignItems: "center",
   },
 
-  cartText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+  addCartText: {
+    color: "#FFF",
+    fontWeight: "600",
+    fontSize: 18,
   },
 });

@@ -96,7 +96,7 @@ export default function SearchScreen() {
 
   const renderProductItem = ({ item }) => (
     <View style={styles.productCard}>
-      <Image source={item.image} style={styles.productImage} />
+      <Image source={item.image} style={styles.productImage} contentFit="contain" />
       <ThemedText style={styles.productName}>{item.name}</ThemedText>
 
       {item.size && (
@@ -227,7 +227,6 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     marginBottom: 10,
-    resizeMode: "contain",
   },
   productName: {
     fontSize: 14,

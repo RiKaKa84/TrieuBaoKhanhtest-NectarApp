@@ -6,21 +6,25 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import {
-  FlatList,
-  Image,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  TextInput,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
-  Platform,
-  Alert,
+    Alert,
+    Dimensions,
+    FlatList,
+    ImageBackground,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    ToastAndroid,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCart } from "../_context/cart-context";
-import { useAuth } from "../_context/auth-context";
+import { useAuth } from "../../contexts/auth-context";
+import { useCart } from "../../contexts/cart-context";
+
+const screenWidth = Dimensions.get("window").width;
+const isSmallScreen = screenWidth < 600;
 
 /* ================= DATA ================= */
 
@@ -29,7 +33,7 @@ const exclusiveProducts = [
     id: "h1",
     name: "Organic Bananas",
     price: 4.99,
-    unit: "1kg, Price",
+    unit: "7pcs, Price",
     image: require("../../assets/images/banana.png"),
   },
   {
@@ -45,14 +49,14 @@ const bestSelling = [
   {
     id: "h3",
     name: "Ớt Chuông",
-    price: 3.99,
+    price: 4.99,
     unit: "1kg, Price",
     image: require("../../assets/images/otchuong.png"),
   },
   {
     id: "h4",
     name: "Rau Xanh",
-    price: 2.99,
+    price: 4.99,
     unit: "1kg, Price",
     image: require("../../assets/images/rau.png"),
   },
@@ -101,7 +105,7 @@ function showToast(message) {
 }
 
 export default function HomeScreen() {
-  const { addToCart } = useCart();
+  const { addToCart, toggleFavorite, isFavorite } = useCart();
   const { user } = useAuth();
 
   const handleAddToCart = (item) => {
@@ -109,84 +113,89 @@ export default function HomeScreen() {
     showToast(`${item.name} đã thêm vào giỏ`);
   };
 
-  const renderProduct = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => {
-        if (item.id === "h2") {
-          router.push({
-            pathname: "/productDetail",
-            params: {
-              name: item.name,
-              price: `$${item.price}`,
-              image: item.image,
-            },
-          });
-        }
-      }}
-    >
-      <Image source={item.image} style={styles.img} />
-
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.sub}>{item.unit ?? "1kg, Price"}</Text>
-
-      <View style={styles.bottomRow}>
-        <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
-
+  const renderProduct = ({ item }) => {
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          if (["h1", "h2", "h3", "h4", "h7", "h8"].includes(item.id)) {
+            router.push({
+              pathname: "/productDetail",
+              params: { id: item.id },
+            });
+          }
+        }}
+      >
+        {/* Heart Icon */}
         <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => handleAddToCart(item)}
+          style={styles.heartBtn}
+          onPress={() => toggleFavorite(item)}
         >
-          <Text style={styles.plus}>+</Text>
+          <Ionicons
+            name={isFavorite(item.id) ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite(item.id) ? "#53B175" : "#999"}
+          />
         </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+
+        <Image source={item.image} style={styles.img} contentFit="contain" />
+
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.sub}>{item.unit ?? "1kg, Price"}</Text>
+
+        <View style={styles.bottomRow}>
+          <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
+
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => handleAddToCart(item)}
+          >
+            <Text style={styles.plus}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderGrocery = ({ item }) => (
     <View style={[styles.groceryCard, { backgroundColor: item.bg }]}>
-      <Image source={item.image} style={styles.groceryImg} />
+      <Image source={item.image} style={styles.groceryImg} contentFit="contain" />
       <Text style={styles.groceryName}>{item.name}</Text>
     </View>
   );
 
+  const renderSectionHeader = (title) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <TouchableOpacity onPress={() => router.push("/explore")}>
+        <Text style={styles.seeAll}>See all</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <FlatList
         data={[]}
         keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{ paddingBottom: 120, alignItems: "center" }}
+        style={styles.list}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={styles.container}>
-            {/* LOGO */}
-            <Image
-              source={require("../../assets/images/carot.png")}
-              style={styles.logo}
-            />
-
-            {/* Tên sinh viên */}
-            <View style={styles.studentBanner}>
-              <Text style={styles.studentBannerText}>
-                Triệu Bảo Khanh · 23810310013
-              </Text>
-            </View>
-
-            {/* Chào user */}
-            {user && (
-              <Text style={styles.greeting}>Xin chào, {user.name}! 👋</Text>
-            )}
-
             {/* LOCATION */}
             <View style={styles.locationWrapper}>
-              <Ionicons name="location-sharp" size={16} color="#7C7C7C" />
+              <Ionicons name="location-sharp" size={20} color="#53B175" />
               <Text style={styles.locationText}>Dhaka, Banassree</Text>
             </View>
 
             {/* SEARCH */}
             <View style={styles.searchBox}>
+              <Ionicons name="search" size={18} color="#999" />
               <TextInput
                 placeholder="Search Store"
                 style={styles.searchInput}
+                placeholderTextColor="#999"
               />
             </View>
 
@@ -194,45 +203,55 @@ export default function HomeScreen() {
             <ImageBackground
               source={require("../../assets/images/fresh-vegetable.png")}
               style={styles.banner}
-              imageStyle={{ borderRadius: 15 }}
-            />
+              imageStyle={{ borderRadius: 12 }}
+            >
+              <View style={styles.bannerDots}>
+                <View style={[styles.dot, styles.activeDot]} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
+            </ImageBackground>
 
             {/* EXCLUSIVE */}
-            <Text style={styles.section}>Exclusive Offer</Text>
+            {renderSectionHeader("Exclusive Offer")}
             <FlatList
               data={exclusiveProducts}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+              numColumns={2}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.columnWrapper}
               renderItem={renderProduct}
               keyExtractor={(item) => item.id}
             />
 
             {/* BEST SELLING */}
-            <Text style={styles.section}>Best Selling</Text>
+            {renderSectionHeader("Best Selling")}
             <FlatList
               data={bestSelling}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+              numColumns={2}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.columnWrapper}
               renderItem={renderProduct}
               keyExtractor={(item) => item.id}
             />
 
             {/* GROCERIES */}
-            <Text style={styles.section}>Groceries</Text>
+            {renderSectionHeader("Groceries")}
             <FlatList
               data={groceries}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+              numColumns={2}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.columnWrapper}
               renderItem={renderGrocery}
               keyExtractor={(item) => item.id}
             />
 
             {/* MEAT */}
-            <Text style={styles.section}>Meat</Text>
+            {renderSectionHeader("Meat")}
             <FlatList
               data={meats}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+              numColumns={2}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.columnWrapper}
               renderItem={renderProduct}
               keyExtractor={(item) => item.id}
             />
@@ -248,121 +267,152 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    padding: 20,
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
     width: "100%",
-    maxWidth: 900,
-    alignSelf: "center",
   },
 
-  logo: {
-    width: 30,
-    height: 30,
-    alignSelf: "center",
-    marginBottom: 8,
-    resizeMode: "contain",
-  },
-
-  studentBanner: {
-    backgroundColor: "#EBF9F1",
-    borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    alignSelf: "center",
-    marginBottom: 8,
-  },
-
-  studentBannerText: {
-    color: "#53B175",
-    fontWeight: "600",
-    fontSize: 12,
-  },
-
-  greeting: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 6,
+  list: {
+    width: "100%",
   },
 
   locationWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 15,
-    gap: 5,
+    marginBottom: 16,
+    gap: 8,
   },
 
   locationText: {
-    fontSize: 14,
-    color: "#7C7C7C",
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
   },
 
   searchBox: {
     backgroundColor: "#f2f2f2",
-    borderRadius: 15,
-    padding: 10,
-    marginBottom: 15,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 
   searchInput: {
-    padding: 0,
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
   },
 
   banner: {
-    height: 130,
-    marginBottom: 20,
+    height: 115,
+    marginBottom: 24,
+    borderRadius: 12,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    paddingBottom: 10,
   },
 
-  section: {
+  bannerDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.4)",
+  },
+
+  activeDot: {
+    backgroundColor: "#53B175",
+    width: 24,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    marginTop: 8,
+  },
+
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    marginTop: 10,
+    fontWeight: "700",
+    color: "#000",
+  },
+
+  seeAll: {
+    fontSize: 14,
+    color: "#53B175",
+    fontWeight: "600",
+  },
+
+  columnWrapper: {
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
 
   card: {
-    width: 160,
+    width: (screenWidth - 48) / 2,
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 10,
-    marginRight: 15,
-    elevation: 3,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e8e8e8",
   },
 
   img: {
-    width: 100,
-    height: 80,
-    alignSelf: "center",
-    resizeMode: "contain",
+    width: "100%",
+    height: 120,
+    marginBottom: 8,
+  },
+
+  heartBtn: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+    zIndex: 10,
+    padding: 4,
   },
 
   name: {
-    marginTop: 10,
+    fontSize: 14,
     fontWeight: "600",
+    color: "#000",
+    marginBottom: 4,
   },
 
   sub: {
     fontSize: 12,
-    color: "#777",
+    color: "#999",
+    marginBottom: 8,
   },
 
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
   },
 
   price: {
-    fontWeight: "bold",
+    fontWeight: "700",
+    fontSize: 14,
+    color: "#000",
   },
 
   addBtn: {
     backgroundColor: "#53B175",
-    width: 35,
-    height: 35,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -370,26 +420,30 @@ const styles = StyleSheet.create({
   plus: {
     color: "#fff",
     fontSize: 18,
+    fontWeight: "bold",
   },
 
   groceryCard: {
-    width: 250,
-    height: 100,
-    borderRadius: 20,
-    padding: 15,
-    marginRight: 15,
+    width: (screenWidth - 48) / 2,
+    height: 110,
+    borderRadius: 16,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
 
   groceryImg: {
     width: 60,
     height: 60,
-    marginRight: 15,
+    resizeMode: "contain",
   },
 
   groceryName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
+    color: "#000",
+    flex: 1,
+    textAlign: "center",
   },
 });

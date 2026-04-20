@@ -1,20 +1,25 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useAuth } from "../contexts/auth-context";
 
 export default function Signup() {
   const router = useRouter();
+  const { signup } = useAuth();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -69,18 +74,41 @@ export default function Signup() {
       </Text>
 
       {/* signup button */}
-     <TouchableOpacity
-  style={styles.btn}
-  onPress={() => {
-    if (!username || !email || !password) {
-      alert("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    router.replace("/homescreen");
-  }}
->
-  <Text style={styles.btnText}>Sign Up</Text>
-</TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.btn, loading && styles.btnDisabled]}
+        onPress={async () => {
+          if (!username.trim() || !email.trim() || !password.trim()) {
+            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+            return;
+          }
+
+          setLoading(true);
+          try {
+            const result = await signup(username.trim(), email.trim(), password);
+            if (result.success) {
+              // Tắt loading trước khi navigate
+              setLoading(false);
+              // Delay để đảm bảo state cập nhật
+              setTimeout(() => {
+                router.replace("/(tabs)/homescreen");
+              }, 100);
+            } else {
+              setLoading(false);
+              Alert.alert("Lỗi", result.message);
+            }
+          } catch (error) {
+            setLoading(false);
+            Alert.alert("Lỗi", "Đã có lỗi xảy ra, vui lòng thử lại");
+          }
+        }}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.btnText}>Sign Up</Text>
+        )}
+      </TouchableOpacity>
 
       {/* login link */}
       <Text style={styles.bottomText}>
@@ -151,6 +179,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     alignItems: "center",
+  },
+
+  btnDisabled: {
+    backgroundColor: "#999",
+    opacity: 0.7,
   },
 
   btnText: {

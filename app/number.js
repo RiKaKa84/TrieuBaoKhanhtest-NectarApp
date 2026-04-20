@@ -1,11 +1,13 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Keyboard,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 export default function NumberScreen() {
@@ -18,10 +20,17 @@ export default function NumberScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* back */}
-      <TouchableOpacity onPress={() => router.back()}>
-        <Text style={styles.back}>←</Text>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* back button */}
+      <TouchableOpacity 
+        style={styles.backBtn}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>Enter your mobile number</Text>
@@ -39,17 +48,20 @@ export default function NumberScreen() {
           keyboardType="numeric"
           maxLength={11}
           style={styles.input}
+          onBlur={() => Keyboard.dismiss()}
         />
       </View>
 
       {/* next button */}
-      <TouchableOpacity
-        style={styles.nextBtn}
-        onPress={() => router.push("/verification")}
-      >
-        <Text style={styles.nextText}>→</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.nextBtn}
+          onPress={() => router.push("/verification")}
+        >
+          <Text style={styles.nextText}>Next →</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -57,12 +69,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 25,
   },
 
-  back: {
-    fontSize: 24,
+  scrollContent: {
+    padding: 25,
+    paddingBottom: 100,
+  },
+
+  backBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 8,
     marginBottom: 20,
+    alignSelf: "flex-start",
+  },
+
+  backText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
   },
 
   title: {
@@ -82,27 +108,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ddd",
     paddingBottom: 10,
+    marginBottom: 40,
   },
 
   flag: { fontSize: 20, marginRight: 5 },
   code: { marginRight: 10, fontSize: 16 },
   input: { flex: 1, fontSize: 16 },
 
+  buttonContainer: {
+    marginTop: 20,
+  },
+
   nextBtn: {
-    position: "absolute",
-    bottom: 120,
-    right: 25,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
     backgroundColor: "#53B175",
-    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 12,
     alignItems: "center",
   },
 
   nextText: {
     color: "#fff",
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });

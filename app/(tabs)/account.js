@@ -4,17 +4,19 @@
  */
 
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../_context/auth-context";
+import { useAuth } from "../../contexts/auth-context";
 
 export default function Account() {
+  const router = useRouter();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
@@ -26,7 +28,17 @@ export default function Account() {
         {
           text: "Đăng xuất",
           style: "destructive",
-          onPress: logout,
+          onPress: async () => {
+            const success = await logout();
+            if (success) {
+              // Delay trước khi navigate
+              setTimeout(() => {
+                router.replace("/login");
+              }, 200);
+            } else {
+              Alert.alert("Lỗi", "Không thể đăng xuất. Vui lòng thử lại.");
+            }
+          },
         },
       ]
     );
@@ -81,12 +93,16 @@ export default function Account() {
       {/* Menu items */}
       <View style={styles.menu}>
         {[
-          { icon: "bag-outline", title: "Orders" },
-          { icon: "heart-outline", title: "Favorites" },
+          { icon: "bag-outline", title: "Orders", route: "/(tabs)/orders" },
+          { icon: "heart-outline", title: "Favorites", route: "/(tabs)/favorite" },
           { icon: "location-outline", title: "Delivery Address" },
           { icon: "card-outline", title: "Payment Methods" },
         ].map((item) => (
-          <TouchableOpacity key={item.title} style={styles.menuItem}>
+          <TouchableOpacity 
+            key={item.title} 
+            style={styles.menuItem}
+            onPress={() => item.route && router.push(item.route)}
+          >
             <View style={styles.menuLeft}>
               <Ionicons name={item.icon} size={22} color="#555" />
               <Text style={styles.menuTitle}>{item.title}</Text>

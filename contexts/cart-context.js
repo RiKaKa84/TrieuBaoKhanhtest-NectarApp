@@ -5,7 +5,7 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { getCart, getOrders, saveCart, saveOrders } from "../../services/storageService";
+import { getCart, getFavorites, getOrders, saveCart, saveFavorites, saveOrders } from "../services/storageService";
 
 // Image map để khôi phục ảnh khi load từ storage
 const IMAGE_MAP = {
@@ -18,8 +18,17 @@ const IMAGE_MAP = {
   "h2": require("@/assets/images/apple.png"),
   "h3": require("@/assets/images/otchuong.png"),
   "h4": require("@/assets/images/rau.png"),
+  "h5": require("@/assets/images/pulses.png"),
+  "h6": require("@/assets/images/rice.png"),
   "h7": require("@/assets/images/thitbo.png"),
   "h8": require("@/assets/images/thitga.png"),
+  // Các sản phẩm từ danh sách Favorite cũ
+  "b1": require("@/assets/images/diet-coke.png"),
+  "b2": require("@/assets/images/sprite-can.png"),
+  "b3": require("@/assets/images/apple-and-grape-juice.png"),
+  "b4": require("@/assets/images/orange-juice.png"),
+  "b5": require("@/assets/images/cocacola.png"),
+  "b6": require("@/assets/images/pepsi.png"),
 };
 
 const CartContext = createContext(null);
@@ -33,15 +42,14 @@ const parsePrice = (value) => {
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [isCartLoading, setIsCartLoading] = useState(true);
 
-  /* ====== LOAD từ AsyncStorage khi khởi động ====== */
   useEffect(() => {
     (async () => {
       try {
         const savedCart = await getCart();
         if (savedCart && savedCart.length > 0) {
-          // Khôi phục image từ IMAGE_MAP
           const restored = savedCart.map((item) => ({
             ...item,
             image: IMAGE_MAP[item.id] ?? require("@/assets/images/apple.png"),
@@ -53,6 +61,16 @@ export function CartProvider({ children }) {
         if (savedOrders) {
           setOrders(savedOrders);
         }
+
+        const savedFavorites = await getFavorites();
+        if (savedFavorites) {
+          // Khôi phục ảnh cho favorites
+          const restoredFavs = savedFavorites.map(item => ({
+            ...item,
+            image: IMAGE_MAP[item.id] ?? require("@/assets/images/apple.png")
+          }));
+          setFavorites(restoredFavs);
+        }
       } catch (error) {
         console.error("[CartContext] load error:", error);
       } finally {
@@ -61,14 +79,18 @@ export function CartProvider({ children }) {
     })();
   }, []);
 
-  /* ====== Tự động lưu cart khi thay đổi ====== */
   useEffect(() => {
     if (!isCartLoading) {
       saveCart(cart);
     }
   }, [cart, isCartLoading]);
 
-  /* ====== CART ACTIONS ====== */
+  useEffect(() => {
+    if (!isCartLoading) {
+      saveFavorites(favorites);
+    }
+  }, [favorites, isCartLoading]);
+
   const increase = useCallback((id) => {
     setCart((prev) =>
       prev.map((item) =>
@@ -135,7 +157,6 @@ export function CartProvider({ children }) {
     setCart([]);
   }, []);
 
-  /* ====== CHECKOUT ====== */
   const checkout = useCallback(async () => {
     try {
       if (cart.length === 0) return { success: false, message: "Giỏ hàng trống" };
@@ -144,7 +165,7 @@ export function CartProvider({ children }) {
 
       const newOrder = {
         id: Date.now().toString(),
-        items: cart.map(({ image, ...rest }) => rest), // bỏ image để serialize
+        items: cart.map(({ image, ...rest }) => rest),
         total: total.toFixed(2),
         createdAt: new Date().toISOString(),
         status: "Đã đặt hàng",
@@ -153,7 +174,7 @@ export function CartProvider({ children }) {
       const updatedOrders = [newOrder, ...orders];
       await saveOrders(updatedOrders);
       setOrders(updatedOrders);
-      setCart([]); // xóa giỏ sau checkout
+      setCart([]);
       return { success: true, order: newOrder };
     } catch (error) {
       console.error("[CartContext] checkout error:", error);
@@ -161,11 +182,28 @@ export function CartProvider({ children }) {
     }
   }, [cart, orders]);
 
+  /* ================= FAVORITES ACTIONS ================= */
+
+  const toggleFavorite = useCallback((product) => {
+    setFavorites((prev) => {
+      const exists = prev.find((item) => item.id === product.id);
+      if (exists) {
+        return prev.filter((item) => item.id !== product.id);
+      }
+      return [...prev, product];
+    });
+  }, []);
+
+  const isFavorite = useCallback((id) => {
+    return favorites.some((item) => item.id === id);
+  }, [favorites]);
+
   return (
     <CartContext.Provider
       value={{
         cart,
         orders,
+        favorites,
         isCartLoading,
         increase,
         decrease,
@@ -174,6 +212,8 @@ export function CartProvider({ children }) {
         addAllToCart,
         clearCart,
         checkout,
+        toggleFavorite,
+        isFavorite,
       }}
     >
       {children}

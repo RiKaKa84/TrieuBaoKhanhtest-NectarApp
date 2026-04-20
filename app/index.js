@@ -4,28 +4,13 @@
  */
 
 import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { getUser } from "../services/storageService";
+import { useAuth } from "../contexts/auth-context";
 
 export default function Index() {
-  const [checking, setChecking] = useState(true);
-  const [hasUser, setHasUser] = useState(false);
+  const { user, isLoading } = useAuth();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const user = await getUser();
-        setHasUser(!!user);
-      } catch (e) {
-        setHasUser(false);
-      } finally {
-        setChecking(false);
-      }
-    })();
-  }, []);
-
-  if (checking) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#53B175" }}>
         <ActivityIndicator size="large" color="#fff" />
@@ -33,10 +18,11 @@ export default function Index() {
     );
   }
 
-  // Nếu đã từng đăng nhập → vào thẳng app, không qua splash/onboarding
-  if (hasUser) {
+  // Nếu đã đăng nhập → vào thẳng app
+  if (user) {
     return <Redirect href="/(tabs)/homescreen" />;
   }
 
-  return <Redirect href="/splash" />;
+  // Chưa đăng nhập → vào trang Login ngay, không qua Splash
+  return <Redirect href="/login" />;
 }

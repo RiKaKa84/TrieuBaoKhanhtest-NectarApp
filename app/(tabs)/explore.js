@@ -122,7 +122,7 @@ export default function ExploreScreen() {
               onPress={() => handleCategoryPress(item)}
               activeOpacity={0.85}
             >
-              <Image source={item.image} style={styles.categoryImage} />
+              <Image source={item.image} style={styles.categoryImage} contentFit="contain" />
               <ThemedText style={styles.categoryName}>
                 {item.name}
               </ThemedText>
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
   categoryImage: {
     width: 80,
     height: 80,
-    resizeMode: "contain",
   },
 
   categoryName: {
