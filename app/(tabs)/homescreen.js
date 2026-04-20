@@ -1,3 +1,8 @@
+/**
+ * homescreen.js - Màn hình chính với thêm vào giỏ
+ * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
+ */
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import {
@@ -7,52 +12,61 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   View,
+  Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useCart } from "../_context/cart-context";
+import { useAuth } from "../_context/auth-context";
 
 /* ================= DATA ================= */
 
 const exclusiveProducts = [
   {
-    id: "1",
+    id: "h1",
     name: "Organic Bananas",
-    price: "$4.99",
+    price: 4.99,
+    unit: "1kg, Price",
     image: require("../../assets/images/banana.png"),
   },
   {
-    id: "2",
+    id: "h2",
     name: "Red Apple",
-    price: "$4.99",
+    price: 4.99,
+    unit: "1kg, Price",
     image: require("../../assets/images/apple.png"),
   },
 ];
 
 const bestSelling = [
   {
-    id: "3",
+    id: "h3",
     name: "Ớt Chuông",
-    price: "$3.99",
+    price: 3.99,
+    unit: "1kg, Price",
     image: require("../../assets/images/otchuong.png"),
   },
   {
-    id: "4",
+    id: "h4",
     name: "Rau Xanh",
-    price: "$2.99",
+    price: 2.99,
+    unit: "1kg, Price",
     image: require("../../assets/images/rau.png"),
   },
 ];
 
 const groceries = [
   {
-    id: "5",
+    id: "h5",
     name: "Pulses",
     image: require("../../assets/images/pulses.png"),
     bg: "#F8EDE3",
   },
   {
-    id: "6",
+    id: "h6",
     name: "Rice",
     image: require("../../assets/images/rice.png"),
     bg: "#E8F5E9",
@@ -61,33 +75,50 @@ const groceries = [
 
 const meats = [
   {
-    id: "7",
+    id: "h7",
     name: "Beef Bone",
-    price: "$4.99",
+    price: 4.99,
+    unit: "500g, Price",
     image: require("../../assets/images/thitbo.png"),
   },
   {
-    id: "8",
+    id: "h8",
     name: "Broiler Chicken",
-    price: "$4.99",
+    price: 4.99,
+    unit: "1kg, Price",
     image: require("../../assets/images/thitga.png"),
   },
 ];
 
 /* ================= COMPONENT ================= */
 
+function showToast(message) {
+  if (Platform.OS === "android") {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  } else {
+    Alert.alert("", message);
+  }
+}
+
 export default function HomeScreen() {
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+
+  const handleAddToCart = (item) => {
+    addToCart(item);
+    showToast(`${item.name} đã thêm vào giỏ`);
+  };
+
   const renderProduct = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        // ✅ Chỉ điều hướng khi là Red Apple
-        if (item.id === "2") {
+        if (item.id === "h2") {
           router.push({
             pathname: "/productDetail",
             params: {
               name: item.name,
-              price: item.price,
+              price: `$${item.price}`,
               image: item.image,
             },
           });
@@ -97,12 +128,15 @@ export default function HomeScreen() {
       <Image source={item.image} style={styles.img} />
 
       <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.sub}>1kg, Price</Text>
+      <Text style={styles.sub}>{item.unit ?? "1kg, Price"}</Text>
 
       <View style={styles.bottomRow}>
-        <Text style={styles.price}>{item.price}</Text>
+        <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
 
-        <TouchableOpacity style={styles.addBtn}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => handleAddToCart(item)}
+        >
           <Text style={styles.plus}>+</Text>
         </TouchableOpacity>
       </View>
@@ -130,10 +164,22 @@ export default function HomeScreen() {
               style={styles.logo}
             />
 
+            {/* Tên sinh viên */}
+            <View style={styles.studentBanner}>
+              <Text style={styles.studentBannerText}>
+                Triệu Bảo Khanh · 23810310013
+              </Text>
+            </View>
+
+            {/* Chào user */}
+            {user && (
+              <Text style={styles.greeting}>Xin chào, {user.name}! 👋</Text>
+            )}
+
             {/* LOCATION */}
             <View style={styles.locationWrapper}>
               <Ionicons name="location-sharp" size={16} color="#7C7C7C" />
-              <Text style={styles.locationText}>Dhaka, Banassre</Text>
+              <Text style={styles.locationText}>Dhaka, Banassree</Text>
             </View>
 
             {/* SEARCH */}
@@ -215,6 +261,28 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 8,
     resizeMode: "contain",
+  },
+
+  studentBanner: {
+    backgroundColor: "#EBF9F1",
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+
+  studentBannerText: {
+    color: "#53B175",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+
+  greeting: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 6,
   },
 
   locationWrapper: {

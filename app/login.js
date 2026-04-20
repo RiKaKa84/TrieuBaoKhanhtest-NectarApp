@@ -1,22 +1,58 @@
+/**
+ * login.js - Màn hình đăng nhập với AsyncStorage
+ * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
+ */
+
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useAuth } from "./_context/auth-context";
 
 export default function Login() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await login(email.trim(), password);
+      if (result.success) {
+        router.replace("/(tabs)/homescreen");
+      } else {
+        Alert.alert("Đăng nhập thất bại", result.message);
+      }
+    } catch (err) {
+      Alert.alert("Lỗi", "Đã có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
+      {/* Thông tin sinh viên */}
+      <View style={styles.studentBadge}>
+        <Text style={styles.studentText}>Triệu Bảo Khanh · 23810310013</Text>
+      </View>
+
       {/* logo */}
       <Image
         source={require("../assets/images/carot.png")}
@@ -29,7 +65,7 @@ export default function Login() {
 
       {/* subtitle */}
       <Text style={styles.subTitle}>
-        Enter your emails and password
+        Enter your email and password
       </Text>
 
       {/* email */}
@@ -38,6 +74,8 @@ export default function Login() {
         value={email}
         onChangeText={setEmail}
         placeholder="Enter your email"
+        keyboardType="email-address"
+        autoCapitalize="none"
         style={styles.input}
       />
 
@@ -51,20 +89,28 @@ export default function Login() {
         style={styles.input}
       />
 
+      {/* hint */}
+      <Text style={styles.hint}>Demo: user@nectar.com / 123456</Text>
+
       {/* forgot password */}
       <Text style={styles.forgot}>Forgot Password?</Text>
 
       {/* login button */}
       <TouchableOpacity
-        style={styles.btn}
-        onPress={() => router.push("/signup")}
+        style={[styles.btn, loading && styles.btnDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
       >
-        <Text style={styles.btnText}>Log In</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.btnText}>Log In</Text>
+        )}
       </TouchableOpacity>
 
       {/* signup link */}
       <Text style={styles.bottomText}>
-        Don’t have an account?{" "}
+        Don't have an account?{" "}
         <Text
           style={styles.signup}
           onPress={() => router.push("/signup")}
@@ -82,6 +128,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 25,
     justifyContent: "center",
+  },
+
+  studentBadge: {
+    backgroundColor: "#EBF9F1",
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+
+  studentText: {
+    color: "#53B175",
+    fontWeight: "600",
+    fontSize: 13,
   },
 
   logo: {
@@ -116,6 +177,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  hint: {
+    color: "#aaa",
+    fontSize: 11,
+    marginTop: 8,
+    fontStyle: "italic",
+  },
+
   forgot: {
     color: "#53B175",
     textAlign: "right",
@@ -130,6 +198,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     marginTop: 10,
+  },
+
+  btnDisabled: {
+    backgroundColor: "#a0d9b4",
   },
 
   btnText: {

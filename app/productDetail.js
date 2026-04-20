@@ -1,25 +1,61 @@
-import { useLocalSearchParams } from "expo-router";
+/**
+ * productDetail.js - Chi tiết sản phẩm với thêm vào giỏ
+ * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
+ */
+
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   Image,
+  Platform,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useCart } from "./_context/cart-context";
 
 /* fallback image nếu không có param */
 import apple from "../assets/images/apple.png";
 
+function showToast(message) {
+  if (Platform.OS === "android") {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  } else {
+    Alert.alert("Thành công", message);
+  }
+}
+
 export default function ProductDetail() {
   const { name, price } = useLocalSearchParams();
+  const router = useRouter();
+  const { addToCart } = useCart();
 
   const [qty, setQty] = useState(1);
   const unitPrice = parseFloat((price || "$4.99").replace(/[^0-9.]/g, "")) || 4.99;
   const totalPrice = `$${(unitPrice * qty).toFixed(2)}`;
 
+  const handleAddToBasket = () => {
+    addToCart({
+      id: `detail-${Date.now()}`,
+      name: name || "Naturel Red Apple",
+      price: unitPrice,
+      unit: "1kg, Price",
+      image: apple,
+      qty: qty,
+    });
+    showToast(`${name || "Sản phẩm"} đã thêm vào giỏ hàng!`);
+  };
+
   return (
     <View style={styles.container}>
+      {/* BACK */}
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Text style={styles.backText}>← Quay lại</Text>
+      </TouchableOpacity>
+
       {/* IMAGE */}
       <View style={styles.imageBox}>
         <Image source={apple} style={styles.image} />
@@ -91,7 +127,7 @@ export default function ProductDetail() {
       </View>
 
       {/* BUTTON */}
-      <TouchableOpacity style={styles.cartBtn}>
+      <TouchableOpacity style={styles.cartBtn} onPress={handleAddToBasket}>
         <Text style={styles.cartText}>Add To Basket</Text>
       </TouchableOpacity>
     </View>
@@ -105,6 +141,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 20,
+  },
+
+  backBtn: {
+    marginBottom: 10,
+  },
+
+  backText: {
+    color: "#53B175",
+    fontSize: 15,
+    fontWeight: "500",
   },
 
   imageBox: {

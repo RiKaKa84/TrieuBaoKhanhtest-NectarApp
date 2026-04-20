@@ -1,39 +1,26 @@
-import { createContext, useContext, useState } from "react";
+/**
+ * cart-context.js
+ * Context giỏ hàng + orders với AsyncStorage persistence
+ * Sinh viên: Triệu Bảo Khanh - MSSV: 23810310013
+ */
 
-const INITIAL_CART = [
-  {
-    id: "1",
-    name: "Bell Pepper Red",
-    price: 4.99,
-    unit: "1kg, Price",
-    image: require("@/assets/images/otchuong.png"),
-    qty: 1,
-  },
-  {
-    id: "2",
-    name: "Egg Chicken Red",
-    price: 1.99,
-    unit: "4pcs, Price",
-    image: require("@/assets/images/egg-red-basket.png"),
-    qty: 1,
-  },
-  {
-    id: "3",
-    name: "Organic Bananas",
-    price: 3.0,
-    unit: "12kg, Price",
-    image: require("@/assets/images/banana.png"),
-    qty: 1,
-  },
-  {
-    id: "4",
-    name: "Ginger",
-    price: 2.99,
-    unit: "250gm, Price",
-    image: require("@/assets/images/rau.png"),
-    qty: 1,
-  },
-];
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { getCart, getOrders, saveCart, saveOrders } from "../../services/storageService";
+
+// Image map để khôi phục ảnh khi load từ storage
+const IMAGE_MAP = {
+  "1": require("@/assets/images/otchuong.png"),
+  "2": require("@/assets/images/egg-red-basket.png"),
+  "3": require("@/assets/images/banana.png"),
+  "4": require("@/assets/images/rau.png"),
+  // Sản phẩm từ homescreen
+  "h1": require("@/assets/images/banana.png"),
+  "h2": require("@/assets/images/apple.png"),
+  "h3": require("@/assets/images/otchuong.png"),
+  "h4": require("@/assets/images/rau.png"),
+  "h7": require("@/assets/images/thitbo.png"),
+  "h8": require("@/assets/images/thitga.png"),
+};
 
 const CartContext = createContext(null);
 
@@ -44,47 +31,90 @@ const parsePrice = (value) => {
 };
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(INITIAL_CART);
+  const [cart, setCart] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [isCartLoading, setIsCartLoading] = useState(true);
 
-  const increase = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+  /* ====== LOAD từ AsyncStorage khi khởi động ====== */
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedCart = await getCart();
+        if (savedCart && savedCart.length > 0) {
+          // Khôi phục image từ IMAGE_MAP
+          const restored = savedCart.map((item) => ({
+            ...item,
+            image: IMAGE_MAP[item.id] ?? require("@/assets/images/apple.png"),
+          }));
+          setCart(restored);
+        }
+
+        const savedOrders = await getOrders();
+        if (savedOrders) {
+          setOrders(savedOrders);
+        }
+      } catch (error) {
+        console.error("[CartContext] load error:", error);
+      } finally {
+        setIsCartLoading(false);
+      }
+    })();
+  }, []);
+
+  /* ====== Tự động lưu cart khi thay đổi ====== */
+  useEffect(() => {
+    if (!isCartLoading) {
+      saveCart(cart);
+    }
+  }, [cart, isCartLoading]);
+
+  /* ====== CART ACTIONS ====== */
+  const increase = useCallback((id) => {
+    setCart((prev) =>
+      prev.map((item) =>
         item.id === id ? { ...item, qty: item.qty + 1 } : item
       )
     );
-  };
+  }, []);
 
-  const decrease = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
+  const decrease = useCallback((id) => {
+    setCart((prev) =>
+      prev.map((item) =>
         item.id === id && item.qty > 1
           ? { ...item, qty: item.qty - 1 }
           : item
       )
     );
-  };
+  }, []);
 
-  const removeItem = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
-  };
+  const removeItem = useCallback((id) => {
+    setCart((prev) => prev.filter((item) => item.id !== id));
+  }, []);
 
-  const addAllToCart = (items) => {
+  const addToCart = useCallback((product) => {
+    setCart((prev) => {
+      const idx = prev.findIndex((i) => i.id === product.id);
+      if (idx >= 0) {
+        return prev.map((i) =>
+          i.id === product.id ? { ...i, qty: i.qty + 1 } : i
+        );
+      }
+      return [...prev, { ...product, qty: product.qty ?? 1 }];
+    });
+  }, []);
+
+  const addAllToCart = useCallback((items) => {
     setCart((prevCart) => {
       let nextCart = [...prevCart];
-
       items.forEach((item) => {
         const itemId = item.id;
         const itemPrice = parsePrice(item.price);
         const unitLabel = item.unit ?? item.description ?? "1kg, Price";
-        const existingIndex = nextCart.findIndex(
-          (cartItem) => cartItem.id === itemId
-        );
+        const existingIndex = nextCart.findIndex((c) => c.id === itemId);
 
         if (existingIndex >= 0) {
-          nextCart = nextCart.map((cartItem) =>
-            cartItem.id === itemId
-              ? { ...cartItem, qty: cartItem.qty + 1 }
-              : cartItem
+          nextCart = nextCart.map((c) =>
+            c.id === itemId ? { ...c, qty: c.qty + 1 } : c
           );
         } else {
           nextCart.push({
@@ -97,14 +127,54 @@ export function CartProvider({ children }) {
           });
         }
       });
-
       return nextCart;
     });
-  };
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
+
+  /* ====== CHECKOUT ====== */
+  const checkout = useCallback(async () => {
+    try {
+      if (cart.length === 0) return { success: false, message: "Giỏ hàng trống" };
+
+      const total = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.qty, 0);
+
+      const newOrder = {
+        id: Date.now().toString(),
+        items: cart.map(({ image, ...rest }) => rest), // bỏ image để serialize
+        total: total.toFixed(2),
+        createdAt: new Date().toISOString(),
+        status: "Đã đặt hàng",
+      };
+
+      const updatedOrders = [newOrder, ...orders];
+      await saveOrders(updatedOrders);
+      setOrders(updatedOrders);
+      setCart([]); // xóa giỏ sau checkout
+      return { success: true, order: newOrder };
+    } catch (error) {
+      console.error("[CartContext] checkout error:", error);
+      return { success: false, message: "Lỗi khi đặt hàng" };
+    }
+  }, [cart, orders]);
 
   return (
     <CartContext.Provider
-      value={{ cart, increase, decrease, removeItem, addAllToCart }}
+      value={{
+        cart,
+        orders,
+        isCartLoading,
+        increase,
+        decrease,
+        removeItem,
+        addToCart,
+        addAllToCart,
+        clearCart,
+        checkout,
+      }}
     >
       {children}
     </CartContext.Provider>
